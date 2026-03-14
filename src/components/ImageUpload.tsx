@@ -35,7 +35,7 @@ export function ImageUpload({ onImageUploaded, currentImage, label = 'Upload Ima
     try {
       setUploading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/upload/image', formData, {
+      const response = await axios.post('http://localhost:3001/api/upload/image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,

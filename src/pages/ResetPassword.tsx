@@ -50,7 +50,7 @@ const ResetPassword: React.FC = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/auth/resetpassword/${resetToken}`,
+        `http://localhost:3001/api/auth/resetpassword/${resetToken}`,
         { password }
       );
 

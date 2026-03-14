@@ -16,7 +16,7 @@ const ForgotPassword: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/forgotpassword', {
+      const response = await axios.post('http://localhost:3001/api/auth/forgotpassword', {
         email,
       });
 

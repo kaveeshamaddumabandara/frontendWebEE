@@ -37,7 +37,7 @@ export function NavigationBar({ userType, userName, profileImage, onMenuClick, s
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
                     {profileImage ? (
-                      <img src={profileImage.startsWith('http') ? profileImage : `http://localhost:5000${profileImage}`} alt={userName} className="w-full h-full object-cover" />
+                      <img src={profileImage.startsWith('http') ? profileImage : `http://localhost:3001${profileImage}`} alt={userName} className="w-full h-full object-cover" />
                     ) : userType === 'admin' ? (
                       <Shield className="w-4 h-4 text-blue-600" />
                     ) : (
@@ -92,7 +92,7 @@ export function NavigationBar({ userType, userName, profileImage, onMenuClick, s
                 <div className="flex items-center gap-3 px-3 py-2">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
                     {profileImage ? (
-                      <img src={profileImage.startsWith('http') ? profileImage : `http://localhost:5000${profileImage}`} alt={userName} className="w-full h-full object-cover" />
+                      <img src={profileImage.startsWith('http') ? profileImage : `http://localhost:3001${profileImage}`} alt={userName} className="w-full h-full object-cover" />
                     ) : userType === 'admin' ? (
                       <Shield className="w-5 h-5 text-blue-600" />
                     ) : (

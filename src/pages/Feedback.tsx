@@ -320,14 +320,16 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{feedback.userId.name}</h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          feedback.userId.role === 'caregiver'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-orange-100 text-orange-700'
-                        }`}>
-                          {feedback.userId.role === 'caregiver' ? 'Caregiver' : 'Care Receiver'}
-                        </span>
+                        <h3 className="text-lg font-semibold text-gray-900">{feedback.userId?.name || 'Unknown User'}</h3>
+                        {feedback.userId && (
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            feedback.userId.role === 'caregiver'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {feedback.userId.role === 'caregiver' ? 'Caregiver' : 'Care Receiver'}
+                          </span>
+                        )}
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           feedback.status === 'pending'
                             ? 'bg-yellow-100 text-yellow-700'
@@ -336,10 +338,12 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
                           {feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                        <Mail className="w-4 h-4" />
-                        <span>{feedback.userId.email}</span>
-                      </div>
+                      {feedback.userId && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                          <Mail className="w-4 h-4" />
+                          <span>{feedback.userId.email}</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
