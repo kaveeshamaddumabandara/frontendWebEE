@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
 import { MessageSquare, Star, User, Mail, Calendar, Filter, Search, Menu, LayoutDashboard, UserCog, Users, ClipboardList, Banknote } from 'lucide-react';
 import { feedbackAPI } from '../services/api';
@@ -35,7 +35,8 @@ interface Feedback {
 
 export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavigateToProfile, onNavigateToUserManagement, onNavigateToPendingRequests, onNavigateToPayments, onLogout, onHome }: FeedbackProps) {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,34 +45,65 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
   const [stats, setStats] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
+    initializeFeedbackPage();
+  }, []);
+
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    setCurrentPage(1);
     fetchFeedbacks();
   }, [filterRating, filterCategory]);
 
-  const fetchFeedbacks = async () => {
+  const initializeFeedbackPage = async () => {
     try {
-      setLoading(true);
+      setInitialLoading(true);
+      await Promise.all([
+        fetchFeedbackStats(),
+        fetchFeedbacks(true),
+      ]);
+      hasInitialized.current = true;
+    } catch (error) {
+      hasInitialized.current = true;
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const fetchFeedbackStats = async () => {
+    try {
+      const statsRes = await feedbackAPI.getFeedbackStats();
+      setStats(statsRes.data.data);
+    } catch (error: any) {
+      console.error('Error fetching feedback stats:', error);
+      toast.error(error.response?.data?.message || 'Failed to load feedback stats');
+      setStats(null);
+    }
+  };
+
+  const fetchFeedbacks = async (isInitialLoad = false) => {
+    try {
+      if (!isInitialLoad) {
+        setTableLoading(true);
+      }
       
       const params: any = {};
       if (filterRating !== 'all') params.rating = filterRating;
       if (filterCategory !== 'all') params.category = filterCategory;
-      if (searchTerm) params.search = searchTerm;
 
-      const [feedbacksRes, statsRes] = await Promise.all([
-        feedbackAPI.getAllFeedbacks(params),
-        feedbackAPI.getFeedbackStats(),
-      ]);
+      const feedbacksRes = await feedbackAPI.getAllFeedbacks(params);
 
       setFeedbacks(feedbacksRes.data.data);
-      setStats(statsRes.data.data);
     } catch (error: any) {
       console.error('Error fetching feedbacks:', error);
       toast.error(error.response?.data?.message || 'Failed to load feedbacks');
       setFeedbacks([]);
-      setStats(null);
     } finally {
-      setLoading(false);
+      if (!isInitialLoad) {
+        setTableLoading(false);
+      }
     }
   };
 
@@ -79,15 +111,11 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
     try {
       await feedbackAPI.updateFeedbackStatus(feedbackId, { status: 'reviewed' });
       toast.success('Feedback marked as reviewed');
-      fetchFeedbacks();
+      await Promise.all([fetchFeedbacks(), fetchFeedbackStats()]);
     } catch (error: any) {
       console.error('Error updating feedback:', error);
       toast.error(error.response?.data?.message || 'Failed to update feedback');
     }
-  };
-
-  const handleSearch = () => {
-    fetchFeedbacks();
   };
 
   const formatDate = (dateString: string) => {
@@ -127,7 +155,7 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
     );
   });
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -146,7 +174,6 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
         {/* Header with Quick Actions Menu */}
         <div className="mb-6 relative">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">User Feedback</h1>
-          <p className="text-gray-600">Review and manage user feedback and ratings</p>
           
           {/* Quick Actions Menu Icon */}
           <div className="absolute top-0 right-0">
@@ -201,45 +228,25 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                <MessageSquare className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats?.total || 0}</span>
-            </div>
-            <p className="text-sm text-gray-600">Total Feedback</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Total Feedback</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats?.total || 0}</h3>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-yellow-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center shadow-md">
-                <Star className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats?.avgRating || 0}</span>
-            </div>
-            <p className="text-sm text-gray-600">Average Rating</p>
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-yellow-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Average Rating</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats?.avgRating || 0}</h3>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-orange-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
-                <Filter className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats?.pending || 0}</span>
-            </div>
-            <p className="text-sm text-gray-600">Pending Review</p>
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-orange-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Pending Review</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats?.pending || 0}</h3>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center shadow-md">
-                <MessageSquare className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats?.reviewed || 0}</span>
-            </div>
-            <p className="text-sm text-gray-600">Reviewed</p>
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Reviewed</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats?.reviewed || 0}</h3>
           </div>
         </div>
 
@@ -254,15 +261,8 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
                   placeholder="Search by name, email, or message..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none"
                 />
-                <button
-                  onClick={handleSearch}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                >
-                  Search
-                </button>
               </div>
             </div>
 
@@ -299,7 +299,12 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
         </div>
 
         {/* Feedback List */}
-        {filteredFeedbacks.length === 0 ? (
+        {tableLoading ? (
+          <div className="bg-white rounded-xl p-12 text-center border-2 border-gray-200">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading feedback data...</p>
+          </div>
+        ) : filteredFeedbacks.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center border-2 border-gray-200">
             <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No feedback found</h3>

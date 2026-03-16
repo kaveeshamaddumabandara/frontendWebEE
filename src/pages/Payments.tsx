@@ -38,7 +38,8 @@ interface Payment {
 
 export function Payments({ userName = 'Admin User', profileImage, onBack, onNavigateToProfile, onNavigateToUserManagement, onNavigateToPendingRequests, onNavigateToFeedback, onLogout, onHome }: PaymentsProps) {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,17 +51,34 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
-    fetchPayments();
-    fetchStats();
-  }, [filterStatus, filterMethod, searchTerm, currentPage]);
+    initializePaymentsPage();
+  }, []);
 
-  const fetchPayments = async () => {
+  useEffect(() => {
+    if (initialLoading) return;
+    fetchPayments();
+  }, [filterStatus, filterMethod, currentPage]);
+
+  const initializePaymentsPage = async () => {
     try {
-      setLoading(true);
+      setInitialLoading(true);
+      await Promise.all([
+        fetchPayments(true),
+        fetchStats(),
+      ]);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const fetchPayments = async (isInitialLoad = false) => {
+    try {
+      if (!isInitialLoad) {
+        setTableLoading(true);
+      }
       const response = await paymentAPI.getAllPayments({
         status: filterStatus !== 'all' ? filterStatus : undefined,
         paymentMethod: filterMethod !== 'all' ? filterMethod : undefined,
-        search: searchTerm || undefined,
         page: currentPage,
         limit: 10,
       });
@@ -72,7 +90,9 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
       toast.error(error.response?.data?.message || 'Failed to load payments');
       setPayments([]);
     } finally {
-      setLoading(false);
+      if (!isInitialLoad) {
+        setTableLoading(false);
+      }
     }
   };
 
@@ -104,7 +124,16 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
     return new Intl.NumberFormat('en-US').format(amount) + ' LKR';
   };
 
-  const filteredPayments = payments;
+  const filteredPayments = payments.filter((payment) => {
+    if (!searchTerm.trim()) return true;
+    const query = searchTerm.toLowerCase();
+    return (
+      (payment.userId?.name || '').toLowerCase().includes(query) ||
+      (payment.userId?.email || '').toLowerCase().includes(query) ||
+      (payment.transactionId || '').toLowerCase().includes(query) ||
+      (payment.description || '').toLowerCase().includes(query)
+    );
+  });
 
   // Calculate statistics from API data
   const stats = statsData?.overview || {
@@ -142,7 +171,7 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
     count: item.count,
   })) || [];
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -161,7 +190,7 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
         {/* Header with Quick Actions Menu */}
         <div className="mb-6 relative">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Management</h1>
-          <p className="text-gray-600">View and manage all payments received from users</p>
+         
           
           {/* Quick Actions Menu Icon */}
           <div className="absolute top-0 right-0">
@@ -216,46 +245,25 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center shadow-md">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
-              <TrendingUp className="w-6 h-6 text-green-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{formatCurrency(stats.completedRevenue || stats.totalRevenue || 0, 'LKR')}</h3>
-            <p className="text-sm text-gray-600">Total Revenue</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Total Revenue</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(stats.completedRevenue || stats.totalRevenue || 0, 'LKR')}</h3>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-emerald-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.completedCount || 0}</span>
-            </div>
-            <p className="text-sm text-gray-600">Completed Payments</p>
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-emerald-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Completed Payments</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.completedCount || 0}</h3>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-orange-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.pendingCount || 0}</span>
-            </div>
-            <p className="text-sm text-gray-600">Pending Payments</p>
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-orange-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Pending Payments</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.pendingCount || 0}</h3>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                <CreditCard className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{stats.totalTransactions || 0}</span>
-            </div>
-            <p className="text-sm text-gray-600">Total Transactions</p>
+          <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all transform hover:-translate-y-1">
+            <p className="text-sm font-semibold text-gray-700">Total Transactions</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.totalTransactions || 0}</h3>
           </div>
         </div>
 
@@ -360,7 +368,12 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
         </div>
 
         {/* Payments List */}
-        {filteredPayments.length === 0 ? (
+        {tableLoading ? (
+          <div className="bg-white rounded-xl p-12 text-center border-2 border-gray-200">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading payment data...</p>
+          </div>
+        ) : filteredPayments.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center border-2 border-gray-200">
             <DollarSign className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No payments found</h3>
@@ -436,10 +449,10 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
             {hasMore && (
               <button 
                 onClick={handleLoadMore}
-                disabled={loading}
+                disabled={tableLoading}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
               >
-                {loading ? 'Loading...' : 'See More'}
+                {tableLoading ? 'Loading...' : 'See More'}
               </button>
             )}
           </div>

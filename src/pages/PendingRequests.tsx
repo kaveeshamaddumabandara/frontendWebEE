@@ -158,7 +158,6 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
         {/* Header with Quick Actions Menu */}
         <div className="mb-6 relative">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Caregiver Approval Requests</h1>
-          <p className="text-gray-600">Review and approve caregiver registration requests</p>
           
           {/* Quick Actions Menu Icon */}
           <div className="absolute top-0 right-0">

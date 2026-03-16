@@ -1,6 +1,6 @@
 import { NavigationBar } from '../components/NavigationBar';
 import { ImageUpload } from '../components/ImageUpload';
-import { User, Mail, Phone, Shield, Edit2, Calendar, Settings, Key, Activity, Menu, LayoutDashboard, Users as UsersIcon, ClipboardList, MessageSquare, Banknote, Save, X, Upload, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, Shield, Edit2, Calendar, Settings, Key, Activity, Menu, LayoutDashboard, Users as UsersIcon, ClipboardList, MessageSquare, Banknote, Save, X, Upload } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { profileAPI } from '../services/api';
 import { toast } from 'react-toastify';
@@ -32,9 +32,6 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
     phone: '',
     profileImage: '',
   });
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletionReason, setDeletionReason] = useState('');
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchProfileData();
@@ -121,26 +118,6 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
     }));
   };
 
-  const handleDeleteAccount = async () => {
-    if (!deletionReason.trim()) {
-      toast.error('Please provide a reason for account deletion');
-      return;
-    }
-    try {
-      setDeleting(true);
-      // Call API to delete account with reason
-      // await profileAPI.deleteAccount({ reason: deletionReason });
-      toast.success('Account deletion request submitted successfully');
-      setShowDeleteModal(false);
-      setDeletionReason('');
-      // Optionally logout or redirect
-    } catch (error: any) {
-      console.error('Error deleting account:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete account');
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -189,7 +166,7 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
         {/* Header with Quick Actions Menu */}
         <div className="mb-6 relative">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
-          <p className="text-gray-600">Administrator Account Information</p>
+         
           
           {/* Quick Actions Menu Icon */}
           <div className="absolute top-0 right-0">
@@ -363,7 +340,7 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
         {/* Personal Information */}
         <div className="bg-white rounded-xl p-6 border-2 border-gray-200 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <User className="w-5 h-5 text-green-600" />
+            
             <h3 className="text-xl font-semibold text-gray-900">Personal Information</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -436,7 +413,7 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
         {/* Administrative Information */}
         <div className="bg-white rounded-xl p-6 border-2 border-gray-200 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-5 h-5 text-blue-600" />
+           
             <h3 className="text-xl font-semibold text-gray-900">Administrative Information</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -465,7 +442,7 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
         {/* Responsibilities */}
         <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
           <div className="flex items-center gap-2 mb-4">
-            <Settings className="w-5 h-5 text-purple-600" />
+           
             <h3 className="text-xl font-semibold text-gray-900">Key Responsibilities</h3>
           </div>
           <div className="space-y-3">
@@ -483,71 +460,18 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
         {/* Security Actions */}
         <div className="mt-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-5 h-5 text-yellow-600" />
+            
             <h3 className="text-lg font-semibold text-gray-900">Security Settings</h3>
           </div>
           <div className="flex flex-wrap gap-3">
             <button className="px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 rounded-lg hover:border-yellow-500 transition-colors">
               Change Password
             </button>
-            <button 
-              onClick={() => setShowDeleteModal(true)}
-              className="px-4 py-2 bg-white border-2 border-red-200 text-red-600 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors"
-            >
-              Delete Account
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Delete Account Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full">
-            <div className="p-6 border-b-2 border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">Delete Account</h2>
-              <p className="text-gray-600 mt-2">Please provide a reason for deleting your account. This action cannot be undone and will require admin approval.</p>
-            </div>
-            
-            <div className="p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Deletion Reason <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={deletionReason}
-                onChange={(e) => setDeletionReason(e.target.value)}
-                placeholder="Enter the reason for account deletion..."
-                rows={6}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-red-500 transition-colors resize-none"
-              />
-              <p className="text-sm text-gray-500 mt-2">
-                {deletionReason.length} / 500 characters
-              </p>
-            </div>
 
-            <div className="p-6 border-t-2 border-gray-200 flex gap-4">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeletionReason('');
-                }}
-                disabled={deleting}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={!deletionReason.trim() || deleting}
-                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Trash2 className="w-4 h-4" />
-                {deleting ? 'Deleting...' : 'Confirm Deletion'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

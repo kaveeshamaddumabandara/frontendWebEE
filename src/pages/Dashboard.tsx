@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
-import { Users, UserCheck, Activity, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock, Menu, UserCog, ClipboardList, FileText, Settings, MessageSquare, Banknote } from 'lucide-react';
+import { Users, Activity, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock, Menu, UserCog, ClipboardList, FileText, Settings, MessageSquare, Banknote } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { dashboardAPI } from '../services/api';
 import { toast } from 'react-toastify';
@@ -151,21 +151,17 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-green-600">+{stats?.userGrowthPercentage || 0}%</span>
+              <p className="text-base font-semibold text-gray-800">Total Users</p>
+              
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats?.totalUsers || 0}</h3>
-            <p className="text-sm text-gray-600">Total Users</p>
+            
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-purple-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                <UserCheck className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-blue-600">{stats?.activeCaregivers || 0} Active</span>
+              <p className="text-base font-semibold text-gray-800">Caregivers</p>
+              
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats?.caregivers || 0}</h3>
             <p className="text-sm text-gray-600">Active Caregivers</p>
@@ -173,10 +169,8 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
 
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center shadow-md">
-                <Activity className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-green-600">+{stats?.appointmentGrowth || 0}%</span>
+              <p className="text-base font-semibold text-gray-800">Appointments</p>
+              
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats?.appointmentsThisWeek || 0}</h3>
             <p className="text-sm text-gray-600">Appointments This Week</p>
@@ -184,10 +178,8 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
 
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-yellow-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center shadow-md">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-green-600">+{stats?.revenueGrowth || 0}%</span>
+              <p className="text-base font-semibold text-gray-800">Revenue</p>
+              
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{formatCurrency(stats?.revenueThisMonth || 0)}</h3>
             <p className="text-sm text-gray-600">Revenue This Month</p>

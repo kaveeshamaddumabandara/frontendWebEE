@@ -171,7 +171,7 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
         {/* Header with Quick Actions Menu */}
         <div className="mb-6 relative">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
-          <p className="text-gray-600">Manage all platform users</p>
+         
           
           {/* Quick Actions Menu Icon */}
           <div className="absolute top-0 right-0">
@@ -229,48 +229,30 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">{users.length}</span>
+              <p className="text-base font-semibold text-gray-800">Total Users</p>
             </div>
-            <p className="text-sm text-gray-600">Total Users</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{users.length}</h3>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center shadow-md">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">
-                {users.filter((u) => u.isActive).length}
-              </span>
+              <p className="text-base font-semibold text-gray-800">Active Users</p>
             </div>
-            <p className="text-sm text-gray-600">Active Users</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{users.filter((u) => u.isActive).length}</h3>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-purple-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">
-                {users.filter((u) => u.role === 'caregiver').length}
-              </span>
+              <p className="text-base font-semibold text-gray-800">Caregivers</p>
             </div>
-            <p className="text-sm text-gray-600">Caregivers</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{users.filter((u) => u.role === 'caregiver').length}</h3>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-orange-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">
-                {users.filter((u) => u.role === 'carereceiver').length}
-              </span>
+              <p className="text-base font-semibold text-gray-800">Care Receivers</p>
             </div>
-            <p className="text-sm text-gray-600">Care Receivers</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{users.filter((u) => u.role === 'carereceiver').length}</h3>
           </div>
         </div>
 
@@ -345,9 +327,7 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
                     <tr key={user._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-semibold">
-                            {user.name.charAt(0).toUpperCase()}
-                          </div>
+                          
                           <span className="font-medium text-gray-900">{user.name}</span>
                         </div>
                       </td>
