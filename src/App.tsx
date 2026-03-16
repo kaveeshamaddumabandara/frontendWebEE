@@ -7,6 +7,8 @@ import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
 import { AdminDashboard } from './pages/Dashboard';
 import { AdminProfile } from './pages/AdminProfile';
 import { UserManagement } from './pages/UserManagement';
@@ -58,13 +60,14 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/contact" element={<ContactUs />} />
     
       <Route
         path="/dashboard"
         element={
           <PrivateRoute>
             <AdminDashboard 
-              onNavigateToProfile={handleNavigateToProfile} 
               onNavigateToUserManagement={handleNavigateToUserManagement}
               onNavigateToPendingRequests={handleNavigateToPendingRequests}
               onNavigateToFeedback={handleNavigateToFeedback}

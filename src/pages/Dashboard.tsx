@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
-import { Users, Activity, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock, Menu, UserCog, ClipboardList, FileText, Settings, MessageSquare, Banknote } from 'lucide-react';
+import { Users, Activity, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock, Menu, ClipboardList, MessageSquare, Banknote } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { dashboardAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 
 interface AdminDashboardProps {
-  onNavigateToProfile: () => void;
   onNavigateToUserManagement?: () => void;
   onNavigateToPendingRequests?: () => void;
   onNavigateToFeedback?: () => void;
@@ -18,7 +17,7 @@ interface AdminDashboardProps {
   onHome?: () => void;
 }
 
-export function AdminDashboard({ userName = 'Admin User', profileImage, onNavigateToProfile, onNavigateToUserManagement, onNavigateToPendingRequests, onNavigateToFeedback, onNavigateToPayments, onLogout, onHome }: AdminDashboardProps) {
+export function AdminDashboard({ userName = 'Admin User', profileImage, onNavigateToUserManagement, onNavigateToPendingRequests, onNavigateToFeedback, onNavigateToPayments, onLogout, onHome }: AdminDashboardProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
@@ -107,13 +106,6 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
             
             {quickActionsOpen && (
               <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl border-2 border-gray-200 py-2 z-50">
-                <button 
-                  onClick={() => { onNavigateToProfile(); setQuickActionsOpen(false); }}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700"
-                >
-                  <UserCog className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium">View My Profile</span>
-                </button>
                 <button 
                   onClick={() => { onNavigateToUserManagement?.(); setQuickActionsOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700"

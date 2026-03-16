@@ -74,9 +74,11 @@ const ResetPassword: React.FC = () => {
         <div className="flex-1 flex items-center justify-center px-6 py-12">
           <div className="max-w-md w-full">
             <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="ElderEase Logo" 
+                className="w-24 h-24 object-contain mx-auto mb-4"
+              />
               
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Password Reset Successful!</h1>
               <p className="text-gray-600 mb-6">
@@ -105,9 +107,11 @@ const ResetPassword: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="ElderEase Logo" 
+                className="w-24 h-24 object-contain mx-auto mb-4"
+              />
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Reset Your Password</h1>
               <p className="text-sm text-gray-600">
                 Enter your new password below.

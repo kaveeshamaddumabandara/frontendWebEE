@@ -83,7 +83,7 @@ export function AdminLoginView({ onBack, onNavigateToForgotPassword, onAuthentic
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="admin@elderease.com"
+                    placeholder="Admin email"
                     required
                   />
                 </div>

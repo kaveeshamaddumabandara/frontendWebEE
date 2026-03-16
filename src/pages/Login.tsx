@@ -64,18 +64,20 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50 flex flex-col">
       <NavigationBar userType="admin" />
       
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="max-w-md w-full">
           {/* Login Card */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-emerald-100 p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="ElderEase Logo" 
+                className="w-24 h-24 object-contain mx-auto mb-4"
+              />
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Administrator Portal</h1>
               <p className="text-sm text-gray-600">
                 Secure access for authorized personnel only
@@ -106,8 +108,8 @@ const Login: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="admin@elderease.com"
+                    className="block w-full pl-12 pr-4 py-3 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white"
+                    placeholder="Enter the administrator email"
                     required
                     disabled={loading}
                   />
@@ -128,7 +130,7 @@ const Login: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="block w-full pl-12 pr-12 py-3 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-white"
                     placeholder="••••••••"
                     required
                     disabled={loading}
@@ -169,7 +171,7 @@ const Login: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/forgot-password')}
-                  className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors"
+                  className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
                 >
                   Forgot password?
                 </button>
@@ -178,7 +180,7 @@ const Login: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 disabled={loading}
               >
                 {loading ? 'Signing in...' : 'Sign In to Admin Portal'}
@@ -186,9 +188,8 @@ const Login: React.FC = () => {
             </form>
 
             {/* Security Notice */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="mt-8 pt-6 border-t border-emerald-100">
               <div className="flex items-start gap-3 text-xs text-gray-500">
-                <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <p>
                   This is a secure area. All login attempts are monitored and logged. 
                   Unauthorized access is strictly prohibited.
@@ -199,7 +200,7 @@ const Login: React.FC = () => {
 
           {/* Additional Info */}
           <div className="mt-6 text-center">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-gray-400">
               ElderEase Admin Portal v2.0 • Secure Connection
             </p>
           </div>
