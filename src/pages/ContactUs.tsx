@@ -54,7 +54,7 @@ const ContactUs: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50">
+    <div className="min-h-screen bg-white">
       <NavigationBar 
         onHome={() => navigate('/login')}
       />
