@@ -1,6 +1,7 @@
 import { NavigationBar } from '../components/NavigationBar';
+import { QuickActionsMenu } from '../components/QuickActionsMenu';
 import { ImageUpload } from '../components/ImageUpload';
-import { User, Mail, Phone, Shield, Edit2, Calendar, Settings, Key, Activity, Menu, LayoutDashboard, Users as UsersIcon, ClipboardList, MessageSquare, Banknote, Save, X, Upload } from 'lucide-react';
+import { User, Mail, Phone, Shield, Edit2, Calendar, Settings, Key, Activity, Save, X, Upload } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { profileAPI } from '../services/api';
 import { toast } from 'react-toastify';
@@ -19,9 +20,8 @@ interface AdminProfileProps {
 }
 
 export function AdminProfile({ userName = 'Admin User', profileImage, onBack, onNavigateToUserManagement, onNavigateToPendingRequests, onNavigateToFeedback, onNavigateToPayments, onLogout, onHome }: AdminProfileProps) {
-  const { updateUser, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
@@ -159,64 +159,25 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-teal-50">
+    <div className="min-h-screen bg-white">
       <NavigationBar userType="admin" userName={userName} profileImage={profileData?.profileImage || profileImage} showAuth={true} onLogout={onLogout} onHome={onHome} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header with Quick Actions Menu */}
-        <div className="mb-6 relative">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
-         
-          
-          {/* Quick Actions Menu Icon */}
-          <div className="absolute top-0 right-0">
-            <button 
-              onClick={() => setQuickActionsOpen(!quickActionsOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Quick Actions Menu"
-            >
-              <Menu className="w-6 h-6 text-gray-700" />
-            </button>
-            
-            {quickActionsOpen && (
-              <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl border-2 border-gray-200 py-2 z-50">
-                <button 
-                  onClick={() => { onBack?.(); setQuickActionsOpen(false); }}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700"
-                >
-                  <LayoutDashboard className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium">Back to Dashboard</span>
-                </button>
-                <button 
-                  onClick={() => { onNavigateToUserManagement?.(); setQuickActionsOpen(false); }}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700"
-                >
-                  <UsersIcon className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Manage Users</span>
-                </button>
-                <button 
-                  onClick={() => { onNavigateToPendingRequests?.(); setQuickActionsOpen(false); }}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700"
-                >
-                  <ClipboardList className="w-5 h-5 text-orange-600" />
-                  <span className="font-medium">Pending Requests</span>
-                </button>
-                <button 
-                  onClick={() => { onNavigateToFeedback?.(); setQuickActionsOpen(false); }}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700"
-                >
-                  <MessageSquare className="w-5 h-5 text-indigo-600" />
-                  <span className="font-medium">User Feedback</span>
-                </button>
-                <button 
-                  onClick={() => { onNavigateToPayments?.(); setQuickActionsOpen(false); }}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700"
-                >
-                  <Banknote className="w-5 h-5 text-emerald-600" />
-                  <span className="font-medium">Payment Management</span>
-                </button>
-              </div>
-            )}
+        {/* Quick Actions Menu Component - Above Header */}
+        <div className="mb-8">
+          <QuickActionsMenu
+            onNavigateToUserManagement={onNavigateToUserManagement}
+            onNavigateToPendingRequests={onNavigateToPendingRequests}
+            onNavigateToFeedback={onNavigateToFeedback}
+            onNavigateToPayments={onNavigateToPayments}
+            onNavigateToDashboard={onBack}
+          />
+        </div>
+
+        {/* Header with Page Title */}
+        <div className="mb-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
           </div>
         </div>
 

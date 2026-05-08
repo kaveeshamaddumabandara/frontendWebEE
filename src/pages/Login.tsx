@@ -64,7 +64,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <NavigationBar userType="admin" />
       
       <div className="flex-1 flex items-center justify-center px-6 py-12">
