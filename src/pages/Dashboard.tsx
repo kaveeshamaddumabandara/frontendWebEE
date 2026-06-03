@@ -139,10 +139,32 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
           <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl border border-gray-100 hover:border-yellow-200 transition-all transform hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
               <p className="text-base font-semibold text-gray-800">Revenue</p>
-              
+              <DollarSign className="w-5 h-5 text-yellow-500" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{formatCurrency(stats?.revenueThisMonth || 0)}</h3>
-            <p className="text-sm text-gray-600">Revenue This Month</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">
+              {formatCurrency(stats?.revenueThisMonth || 0)}
+            </h3>
+            <p className="text-sm text-gray-500 mb-2">Platform Revenue This Month</p>
+            <div className="flex flex-col gap-1 pt-2 border-t border-gray-100">
+              <div className="flex justify-between text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                  Registration Fees
+                </span>
+                <span className="font-semibold text-gray-700">
+                  {formatCurrency(stats?.registrationFeeRevenue || 0)}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
+                  Booking Flat Fees
+                </span>
+                <span className="font-semibold text-gray-700">
+                  {formatCurrency(stats?.flatFeeRevenue || 0)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -216,17 +238,49 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
 
           {/* Revenue Trends */}
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-yellow-600" />
-              Revenue Trends
+              Platform Revenue Trends
             </h3>
+            <p className="text-xs text-gray-400 mb-4">Registration fees + booking flat fees (LKR)</p>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={revenueData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="revenue" stroke="#10B981" strokeWidth={2} name="Revenue" />
+                <YAxis tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
+                <Tooltip
+                  formatter={(value: number | undefined, name: string | undefined) => [
+                    `${new Intl.NumberFormat('en-US').format(value ?? 0)} LKR`,
+                    name ?? '',
+                  ]}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  name="Total Revenue"
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="registrationFee"
+                  stroke="#F59E0B"
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  name="Registration Fees"
+                  dot={{ r: 3 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="flatFee"
+                  stroke="#8B5CF6"
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  name="Booking Flat Fees"
+                  dot={{ r: 3 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>

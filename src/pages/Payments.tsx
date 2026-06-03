@@ -136,7 +136,8 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
 
   // Calculate statistics from API data
   const stats = statsData?.overview || {
-    totalRevenue: 0,
+    grossRevenue: 0,
+    completedRevenue: 0,
     totalTransactions: 0,
     completedCount: 0,
     pendingCount: 0,
@@ -208,7 +209,8 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all transform hover:-translate-y-1">
             <p className="text-sm font-semibold text-gray-700">Total Revenue</p>
-            <h3 className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(stats.completedRevenue || stats.totalRevenue || 0, 'LKR')}</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(stats.completedRevenue ?? 0, 'LKR')}</h3>
+            <p className="text-xs text-gray-400 mt-1">Completed transactions only</p>
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-emerald-200 transition-all transform hover:-translate-y-1">
