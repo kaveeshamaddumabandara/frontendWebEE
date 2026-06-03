@@ -1,7 +1,7 @@
 import { NavigationBar } from '../components/NavigationBar';
 import { QuickActionsMenu } from '../components/QuickActionsMenu';
 import { ImageUpload } from '../components/ImageUpload';
-import { User, Mail, Phone, Shield, Edit2, Calendar, Settings, Key, Activity, Save, X, Upload } from 'lucide-react';
+import { User, Mail, Phone, Shield, Edit2, Calendar, Settings, Key, Activity, Save, X, Upload, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { profileAPI } from '../services/api';
 import { toast } from 'react-toastify';
@@ -32,6 +32,61 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
     phone: '',
     profileImage: '',
   });
+
+  // Change password modal state
+  const [pwModalOpen, setPwModalOpen] = useState(false);
+  const [pwChanging, setPwChanging] = useState(false);
+  const [pwError, setPwError] = useState('');
+  const [pwForm, setPwForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [pwShow, setPwShow] = useState({
+    current: false,
+    newPw: false,
+    confirm: false,
+  });
+
+  const openPasswordModal = () => {
+    setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setPwShow({ current: false, newPw: false, confirm: false });
+    setPwError('');
+    setPwModalOpen(true);
+  };
+
+  const handleChangePassword = async () => {
+    const { currentPassword, newPassword, confirmPassword } = pwForm;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPwError('All fields are required.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPwError('New password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError('New password and confirmation do not match.');
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setPwError('New password must be different from your current password.');
+      return;
+    }
+
+    try {
+      setPwChanging(true);
+      setPwError('');
+      await profileAPI.changePassword({ currentPassword, newPassword });
+      setPwModalOpen(false);
+      toast.success('Password changed successfully!');
+    } catch (error: any) {
+      setPwError(error.response?.data?.message || 'Failed to change password. Please try again.');
+    } finally {
+      setPwChanging(false);
+    }
+  };
 
   useEffect(() => {
     fetchProfileData();
@@ -421,18 +476,194 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
         {/* Security Actions */}
         <div className="mt-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
-            
+            <Lock className="w-5 h-5 text-yellow-600" />
             <h3 className="text-lg font-semibold text-gray-900">Security Settings</h3>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button className="px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 rounded-lg hover:border-yellow-500 transition-colors">
+            <button
+              onClick={openPasswordModal}
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 rounded-lg hover:border-yellow-500 hover:text-yellow-700 transition-colors font-medium"
+            >
+              <Key className="w-4 h-4" />
               Change Password
             </button>
           </div>
         </div>
       </div>
 
+      {/* Change Password Modal */}
+      {pwModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-gray-900">Change Password</h2>
+              </div>
+              <button
+                onClick={() => setPwModalOpen(false)}
+                disabled={pwChanging}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
 
+            {/* Modal body */}
+            <div className="px-6 py-5 space-y-4">
+              {/* Error banner */}
+              {pwError && (
+                <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>{pwError}</span>
+                </div>
+              )}
+
+              {/* Current password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={pwShow.current ? 'text' : 'password'}
+                    value={pwForm.currentPassword}
+                    onChange={e => setPwForm(f => ({ ...f, currentPassword: e.target.value }))}
+                    placeholder="Enter current password"
+                    className="w-full px-3 py-2.5 pr-10 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none text-sm"
+                    disabled={pwChanging}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPwShow(s => ({ ...s, current: !s.current }))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {pwShow.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={pwShow.newPw ? 'text' : 'password'}
+                    value={pwForm.newPassword}
+                    onChange={e => setPwForm(f => ({ ...f, newPassword: e.target.value }))}
+                    placeholder="Min. 8 characters"
+                    className="w-full px-3 py-2.5 pr-10 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none text-sm"
+                    disabled={pwChanging}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPwShow(s => ({ ...s, newPw: !s.newPw }))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {pwShow.newPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {/* Strength hint */}
+                {pwForm.newPassword.length > 0 && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    {[1, 2, 3, 4].map(level => (
+                      <div
+                        key={level}
+                        className={`h-1 flex-1 rounded-full transition-colors ${
+                          (() => {
+                            let s = 0;
+                            if (pwForm.newPassword.length >= 8) s++;
+                            if (/[A-Z]/.test(pwForm.newPassword)) s++;
+                            if (/\d/.test(pwForm.newPassword)) s++;
+                            if (/[^A-Za-z0-9]/.test(pwForm.newPassword)) s++;
+                            return s >= level
+                              ? ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-500'][level - 1]
+                              : 'bg-gray-200';
+                          })()
+                        }`}
+                      />
+                    ))}
+                    <span className="text-xs text-gray-500 ml-1">
+                      {(() => {
+                        let s = 0;
+                        if (pwForm.newPassword.length >= 8) s++;
+                        if (/[A-Z]/.test(pwForm.newPassword)) s++;
+                        if (/\d/.test(pwForm.newPassword)) s++;
+                        if (/[^A-Za-z0-9]/.test(pwForm.newPassword)) s++;
+                        return ['', 'Weak', 'Fair', 'Good', 'Strong'][s];
+                      })()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={pwShow.confirm ? 'text' : 'password'}
+                    value={pwForm.confirmPassword}
+                    onChange={e => setPwForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                    placeholder="Re-enter new password"
+                    className="w-full px-3 py-2.5 pr-10 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none text-sm"
+                    disabled={pwChanging}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPwShow(s => ({ ...s, confirm: !s.confirm }))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {pwShow.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {/* Match indicator */}
+                {pwForm.confirmPassword.length > 0 && (
+                  <p className={`text-xs mt-1 flex items-center gap-1 ${
+                    pwForm.newPassword === pwForm.confirmPassword ? 'text-green-600' : 'text-red-500'
+                  }`}>
+                    {pwForm.newPassword === pwForm.confirmPassword
+                      ? <><CheckCircle2 className="w-3.5 h-3.5" /> Passwords match</>
+                      : <><AlertCircle className="w-3.5 h-3.5" /> Passwords do not match</>
+                    }
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={() => setPwModalOpen(false)}
+                disabled={pwChanging}
+                className="flex-1 px-4 py-2.5 text-sm font-medium border-2 border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleChangePassword}
+                disabled={pwChanging}
+                className="flex-1 px-4 py-2.5 text-sm font-medium bg-green-500 text-white rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {pwChanging ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Changing...
+                  </>
+                ) : (
+                  <>
+                    Change Password
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
