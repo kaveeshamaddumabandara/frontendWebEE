@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
 import { QuickActionsMenu } from '../components/QuickActionsMenu';
 import { Users, Activity, TrendingUp, DollarSign, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
@@ -30,6 +30,8 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
   const [activitiesPage, setActivitiesPage] = useState(1);
   const [activitiesTotalPages, setActivitiesTotalPages] = useState(1);
   const [activitiesTotal, setActivitiesTotal] = useState(0);
+  // Skip the activities effect on the very first render — fetchDashboardData already loads page 1
+  const activitiesInitialMount = useRef(true);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
   const itemsPerPage = 5;
 
@@ -38,6 +40,10 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
   }, []);
 
   useEffect(() => {
+    if (activitiesInitialMount.current) {
+      activitiesInitialMount.current = false;
+      return;
+    }
     fetchActivities(activitiesPage);
   }, [activitiesPage]);
 
@@ -78,7 +84,6 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
   };
 
   const fetchActivities = async (page: number) => {
-    if (page === 1) return; // already loaded by fetchDashboardData on mount
     try {
       setActivitiesLoading(true);
       const res = await dashboardAPI.getRecentActivities(page, itemsPerPage);
@@ -354,14 +359,13 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
                       <p className="text-sm text-gray-500">{activity.time}</p>
                     </div>
                   </div>
-                  <span className={`ml-4 px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                    activity.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    activity.status === 'urgent'    ? 'bg-red-100 text-red-700'     :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
-                    {activity.status === 'completed' ? 'Completed' :
-                     activity.status === 'urgent'    ? 'Urgent'    : 'Pending'}
-                  </span>
+                  {(activity.status === 'completed' || activity.status === 'urgent') && (
+                    <span className={`ml-4 px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
+                      activity.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {activity.status === 'completed' ? 'Completed' : 'Urgent'}
+                    </span>
+                  )}
                 </div>
               ))
             )}

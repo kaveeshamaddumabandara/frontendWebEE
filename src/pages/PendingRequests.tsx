@@ -36,7 +36,6 @@ interface Request {
   experience?: string;
   qualifications?: string;
   specializations?: string[];
-  availability?: string;
   hourlyRate?: number;
   bio?: string;
   certifications?: string[];
@@ -490,12 +489,6 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
                     <div>
                       <label className="text-sm font-medium text-gray-600">Languages</label>
                       <p className="text-gray-900">{selectedRequest.languages.join(', ')}</p>
-                    </div>
-                  )}
-                  {selectedRequest.availability && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Availability</label>
-                      <p className="text-gray-900">{selectedRequest.availability}</p>
                     </div>
                   )}
                   {selectedRequest.hourlyRate && (

@@ -1,8 +1,8 @@
 import { NavigationBar } from '../components/NavigationBar';
 import { QuickActionsMenu } from '../components/QuickActionsMenu';
 import { ImageUpload } from '../components/ImageUpload';
-import { User, Mail, Phone, Shield, Edit2, Calendar, Settings, Key, Activity, Save, X, Upload, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { Mail, Phone, Shield, Edit2, Calendar, Key, Save, X, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { profileAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -301,54 +301,6 @@ export function AdminProfile({ userName = 'Admin User', profileImage, onBack, on
               {isEditing && editedData.profileImage && (
                 <p className="text-sm text-green-600 mt-2">✓ New profile picture selected</p>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalLogins || 0}</p>
-                <p className="text-xs text-gray-600">Total Logins</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Settings className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{stats?.actionsThisMonth || 0}</p>
-                <p className="text-xs text-gray-600">Actions This Month</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{stats?.reportsGenerated || 0}</p>
-                <p className="text-xs text-gray-600">Reports Generated</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900">Super Admin</p>
-                <p className="text-xs text-gray-600">Access Level</p>
-              </div>
             </div>
           </div>
         </div>

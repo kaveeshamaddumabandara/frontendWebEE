@@ -179,4 +179,15 @@ export const paymentAPI = {
   deletePayment: (id: string) => api.delete(`/payments/${id}`),
 };
 
+// Notification API (admin only)
+export const notificationAPI = {
+  getNotifications: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) =>
+    api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/mark-all-read'),
+  deleteNotification: (id: string) => api.delete(`/notifications/${id}`),
+  deleteAllRead: () => api.delete('/notifications/read'),
+};
+
 export default api;

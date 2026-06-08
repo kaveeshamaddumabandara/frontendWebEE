@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
 import { QuickActionsMenu } from '../components/QuickActionsMenu';
-import { Users, UserPlus, Search, Edit, Trash2, CheckCircle, XCircle, Filter, Eye, X } from 'lucide-react';
+import { Search, Edit, CheckCircle, XCircle, Eye, X } from 'lucide-react';
 import { adminAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -41,10 +41,6 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletionReason, setDeletionReason] = useState('');
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   const [editingStatus, setEditingStatus] = useState(false);
@@ -65,36 +61,6 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
       setUsers([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async (user: User) => {
-    setUserToDelete(user);
-    setDeletionReason('');
-    setShowDeleteModal(true);
-  };
-
-  const confirmDeleteUser = async () => {
-    if (!deletionReason.trim()) {
-      toast.error('Please provide a reason for deleting this user');
-      return;
-    }
-
-    if (!userToDelete) return;
-
-    try {
-      setDeleting(true);
-      await adminAPI.deleteUser(userToDelete._id, { reason: deletionReason });
-      toast.success('User deleted successfully');
-      setShowDeleteModal(false);
-      setUserToDelete(null);
-      setDeletionReason('');
-      fetchUsers();
-    } catch (error: any) {
-      console.error('Error deleting user:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete user');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -334,13 +300,6 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDeleteUser(user)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete User"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -458,24 +417,68 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <p className="text-sm text-gray-600">Experience (Years)</p>
-                            <p className="font-medium text-gray-900">{selectedUser.profile.experience || 'N/A'}</p>
+                            <p className="text-sm text-gray-600">Experience</p>
+                            <p className="font-medium text-gray-900">
+                              {selectedUser.profile.experience != null ? `${selectedUser.profile.experience} year${selectedUser.profile.experience !== 1 ? 's' : ''}` : 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Hourly Rate</p>
+                            <p className="font-medium text-gray-900">
+                              {selectedUser.profile.hourlyRate != null ? `LKR ${selectedUser.profile.hourlyRate}` : 'N/A'}
+                            </p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-600">Availability</p>
-                            <p className="font-medium text-gray-900 capitalize">{selectedUser.profile.status || 'N/A'}</p>
+                            <p className="font-medium text-gray-900 capitalize">
+                              {selectedUser.profile.availabilityType || selectedUser.profile.status || 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Rating</p>
+                            <p className="font-medium text-gray-900">
+                              {selectedUser.profile.rating != null
+                                ? `${selectedUser.profile.rating.toFixed(1)} ★ (${selectedUser.profile.totalReviews || 0} reviews)`
+                                : 'No ratings yet'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Registration Fee</p>
+                            <p className={`font-medium ${selectedUser.profile.registrationFeePaid ? 'text-green-600' : 'text-orange-500'}`}>
+                              {selectedUser.profile.registrationFeePaid ? 'Paid' : 'Pending'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Background Check</p>
+                            <p className="font-medium text-gray-900 capitalize">
+                              {selectedUser.profile.backgroundCheckStatus || 'N/A'}
+                            </p>
                           </div>
                           <div className="md:col-span-2">
-                            <p className="text-sm text-gray-600">Specializations</p>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {selectedUser.profile.specializations && selectedUser.profile.specializations.length > 0 ? (
+                            <p className="text-sm text-gray-600 mb-2">Specializations</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedUser.profile.specializations?.length > 0 ? (
                                 selectedUser.profile.specializations.map((spec: string, idx: number) => (
                                   <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                                     {spec}
                                   </span>
                                 ))
                               ) : (
-                                <p className="text-gray-500">No specializations listed</p>
+                                <p className="text-gray-500 text-sm">No specializations listed</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="md:col-span-2">
+                            <p className="text-sm text-gray-600 mb-2">Skills</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedUser.profile.skills?.length > 0 ? (
+                                selectedUser.profile.skills.map((skill: string, idx: number) => (
+                                  <span key={idx} className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm">
+                                    {skill}
+                                  </span>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-sm">No skills listed</p>
                               )}
                             </div>
                           </div>
@@ -484,16 +487,35 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
 
                       <div className="bg-purple-50 rounded-xl p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Qualifications & Certifications</h3>
-                        <div className="space-y-3">
-                          {selectedUser.profile.qualifications && selectedUser.profile.qualifications.length > 0 ? (
-                            selectedUser.profile.qualifications.map((qual: string, idx: number) => (
-                              <div key={idx} className="flex items-start gap-2">
-                                <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                                <p className="text-gray-900">{qual}</p>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">Qualification</p>
+                            {selectedUser.profile.qualifications?.length > 0 ? (
+                              selectedUser.profile.qualifications.map((qual: string, idx: number) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                                  <p className="text-gray-900">{qual}</p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-gray-500 text-sm">No qualification listed</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Education</p>
+                            <p className="text-gray-900">{selectedUser.profile.education || 'Not specified'}</p>
+                          </div>
+                          {selectedUser.profile.certificationNames?.length > 0 && (
+                            <div>
+                              <p className="text-sm text-gray-600 mb-2">Certifications</p>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedUser.profile.certificationNames.map((cert: string, idx: number) => (
+                                  <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                                    {cert}
+                                  </span>
+                                ))}
                               </div>
-                            ))
-                          ) : (
-                            <p className="text-gray-500">No qualifications listed</p>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -506,16 +528,16 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
                             <p className="text-gray-900 mt-1">{selectedUser.profile.bio || 'No bio provided'}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">Languages</p>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {selectedUser.profile.languages && selectedUser.profile.languages.length > 0 ? (
+                            <p className="text-sm text-gray-600 mb-2">Languages</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedUser.profile.languages?.length > 0 ? (
                                 selectedUser.profile.languages.map((lang: string, idx: number) => (
                                   <span key={idx} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                                     {lang}
                                   </span>
                                 ))
                               ) : (
-                                <p className="text-gray-500">No languages specified</p>
+                                <p className="text-gray-500 text-sm">No languages specified</p>
                               )}
                             </div>
                           </div>
@@ -531,16 +553,20 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <p className="text-sm text-gray-600">Age</p>
-                            <p className="font-medium text-gray-900">{selectedUser.profile.age || 'N/A'} years</p>
+                            <p className="text-sm text-gray-600">Mobility Level</p>
+                            <p className="font-medium text-gray-900 capitalize">{selectedUser.profile.mobilityLevel || 'N/A'}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">Gender</p>
-                            <p className="font-medium text-gray-900 capitalize">{selectedUser.profile.gender || 'N/A'}</p>
+                            <p className="text-sm text-gray-600">Cognitive Status</p>
+                            <p className="font-medium text-gray-900 capitalize">{selectedUser.profile.cognitiveStatus?.replace(/-/g, ' ') || 'N/A'}</p>
                           </div>
                           <div className="md:col-span-2">
                             <p className="text-sm text-gray-600">Address</p>
                             <p className="font-medium text-gray-900">{selectedUser.profile.address || 'N/A'}</p>
+                          </div>
+                          <div className="md:col-span-2">
+                            <p className="text-sm text-gray-600">Emergency Contact</p>
+                            <p className="font-medium text-gray-900">{selectedUser.profile.emergencyContactInfo || 'N/A'}</p>
                           </div>
                         </div>
                       </div>
@@ -551,29 +577,43 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
                           <div>
                             <p className="text-sm text-gray-600 mb-2">Medical Conditions</p>
                             <div className="flex flex-wrap gap-2">
-                              {selectedUser.profile.medicalConditions && selectedUser.profile.medicalConditions.length > 0 ? (
+                              {selectedUser.profile.medicalConditions?.length > 0 ? (
                                 selectedUser.profile.medicalConditions.map((condition: string, idx: number) => (
                                   <span key={idx} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
                                     {condition}
                                   </span>
                                 ))
                               ) : (
-                                <p className="text-gray-500">No medical conditions listed</p>
+                                <p className="text-gray-500 text-sm">No medical conditions listed</p>
                               )}
                             </div>
                           </div>
                           <div>
                             <p className="text-sm text-gray-600 mb-2">Medications</p>
-                            <div className="space-y-2">
-                              {selectedUser.profile.medications && selectedUser.profile.medications.length > 0 ? (
-                                selectedUser.profile.medications.map((med: string, idx: number) => (
+                            {selectedUser.profile.medicationList?.length > 0 ? (
+                              <div className="space-y-1">
+                                {selectedUser.profile.medicationList.map((med: string, idx: number) => (
                                   <div key={idx} className="flex items-start gap-2">
-                                    <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
-                                    <p className="text-gray-900">{med}</p>
+                                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <p className="text-gray-900 text-sm">{med}</p>
                                   </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-500 text-sm">No medications listed</p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">Allergies</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedUser.profile.allergies?.length > 0 ? (
+                                selectedUser.profile.allergies.map((allergy: string, idx: number) => (
+                                  <span key={idx} className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm">
+                                    {allergy}
+                                  </span>
                                 ))
                               ) : (
-                                <p className="text-gray-500">No medications listed</p>
+                                <p className="text-gray-500 text-sm">No allergies listed</p>
                               )}
                             </div>
                           </div>
@@ -581,19 +621,35 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
                       </div>
 
                       <div className="bg-yellow-50 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Special Concerns & Requirements</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Care Requirements</h3>
                         <div className="space-y-3">
                           <div>
-                            <p className="text-sm text-gray-600">Mobility Level</p>
-                            <p className="font-medium text-gray-900 capitalize">{selectedUser.profile.mobilityLevel || 'N/A'}</p>
+                            <p className="text-sm text-gray-600 mb-2">Care Needs</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedUser.profile.careNeeds?.length > 0 ? (
+                                selectedUser.profile.careNeeds.map((need: string, idx: number) => (
+                                  <span key={idx} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm capitalize">
+                                    {need.replace(/-/g, ' ')}
+                                  </span>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-sm">No care needs specified</p>
+                              )}
+                            </div>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">Special Requirements</p>
-                            <p className="text-gray-900 mt-1">{selectedUser.profile.specialRequirements || 'None specified'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">Emergency Contact</p>
-                            <p className="font-medium text-gray-900">{selectedUser.profile.emergencyContact || 'N/A'}</p>
+                            <p className="text-sm text-gray-600 mb-2">Dietary Restrictions</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedUser.profile.dietaryRestrictions?.length > 0 ? (
+                                selectedUser.profile.dietaryRestrictions.map((d: string, idx: number) => (
+                                  <span key={idx} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm">
+                                    {d}
+                                  </span>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-sm">None specified</p>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -737,91 +793,6 @@ export function UserManagement({ userName = 'Admin User', profileImage, onBack, 
         </div>
       )}
 
-      {/* Delete User Confirmation Modal */}
-      {showDeleteModal && userToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full">
-            {/* Modal Header */}
-            <div className="bg-red-50 border-b border-red-200 px-6 py-4 rounded-t-2xl">
-              <h2 className="text-2xl font-bold text-red-900">Delete User</h2>
-              <p className="text-red-700 mt-1">This action cannot be undone</p>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6">
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">User to be deleted:</p>
-                <p className="font-semibold text-gray-900 mt-1">{userToDelete.name}</p>
-                <p className="text-sm text-gray-600">{userToDelete.email}</p>
-                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
-                  userToDelete.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                  userToDelete.role === 'caregiver' ? 'bg-blue-100 text-blue-700' :
-                  'bg-orange-100 text-orange-700'
-                }`}>
-                  {userToDelete.role}
-                </span>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for Deletion <span className="text-red-600">*</span>
-                </label>
-                <textarea
-                  value={deletionReason}
-                  onChange={(e) => setDeletionReason(e.target.value)}
-                  placeholder="Please provide a detailed reason for deleting this user account..."
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none resize-none"
-                  rows={4}
-                  maxLength={500}
-                  disabled={deleting}
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-xs text-gray-500">Required for record keeping</p>
-                  <p className="text-xs text-gray-500">{deletionReason.length}/500</p>
-                </div>
-              </div>
-
-              {!deletionReason.trim() && (
-                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">Please provide a reason before proceeding</p>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="border-t border-gray-200 px-6 py-4 flex gap-3 justify-end rounded-b-2xl">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setUserToDelete(null);
-                  setDeletionReason('');
-                }}
-                disabled={deleting}
-                className="px-4 py-2 text-sm border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteUser}
-                disabled={!deletionReason.trim() || deleting}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {deleting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" />
-                    Delete User
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
