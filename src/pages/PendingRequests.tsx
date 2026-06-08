@@ -31,6 +31,7 @@ interface Request {
   city?: string;
   province?: string;
   profileImage?: string;
+  registrationFeePaid?: boolean;
   // Caregiver specific fields
   experience?: string;
   qualifications?: string;
@@ -244,6 +245,15 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
                           }`}>
                             {status.charAt(0).toUpperCase() + status.slice(1)}
                           </span>
+                          {request.role === 'caregiver' && (
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              request.registrationFeePaid
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {request.registrationFeePaid ? 'Fee Paid' : 'Fee Pending'}
+                            </span>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 gap-2 mb-3">
                           <div className="flex items-center gap-2 text-sm text-gray-600">

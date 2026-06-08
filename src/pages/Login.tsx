@@ -14,24 +14,6 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const getPasswordStrength = (password: string) => {
-    if (password.length === 0) return { strength: 0, label: '', color: '' };
-    if (password.length < 6) return { strength: 25, label: 'Weak', color: 'bg-red-500' };
-    
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^a-zA-Z0-9]/.test(password)) strength += 25;
-    
-    if (strength <= 25) return { strength: 25, label: 'Weak', color: 'bg-red-500' };
-    if (strength <= 50) return { strength: 50, label: 'Fair', color: 'bg-orange-500' };
-    if (strength <= 75) return { strength: 75, label: 'Good', color: 'bg-yellow-500' };
-    return { strength: 100, label: 'Strong', color: 'bg-green-500' };
-  };
-
-  const passwordStrength = getPasswordStrength(password);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -148,22 +130,6 @@ const Login: React.FC = () => {
                   </button>
                 </div>
                 
-                {/* Password Strength Indicator */}
-                {password && (
-                  <div className="mt-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${passwordStrength.color} transition-all duration-300`}
-                          style={{ width: `${passwordStrength.strength}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-medium text-gray-600">
-                        {passwordStrength.label}
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Forgot Password */}

@@ -27,18 +27,24 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
   const [userDistribution, setUserDistribution] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [activitiesPage, setActivitiesPage] = useState(1);
+  const [activitiesTotalPages, setActivitiesTotalPages] = useState(1);
+  const [activitiesTotal, setActivitiesTotal] = useState(0);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
   const itemsPerPage = 5;
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    fetchActivities(activitiesPage);
+  }, [activitiesPage]);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch all dashboard data in parallel
+
       const [
         statsRes,
         growthRes,
@@ -52,7 +58,7 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
         dashboardAPI.getUserDistribution(),
         dashboardAPI.getPlatformActivity(),
         dashboardAPI.getRevenueTrends(),
-        dashboardAPI.getRecentActivities(),
+        dashboardAPI.getRecentActivities(1, itemsPerPage),
       ]);
 
       setStats(statsRes.data.data);
@@ -61,11 +67,28 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
       setPlatformActivity(activityRes.data.data);
       setRevenueData(revenueRes.data.data);
       setRecentActivities(activitiesRes.data.data);
+      setActivitiesTotal(activitiesRes.data.pagination.total);
+      setActivitiesTotalPages(activitiesRes.data.pagination.totalPages);
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
       toast.error(error.response?.data?.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActivities = async (page: number) => {
+    if (page === 1) return; // already loaded by fetchDashboardData on mount
+    try {
+      setActivitiesLoading(true);
+      const res = await dashboardAPI.getRecentActivities(page, itemsPerPage);
+      setRecentActivities(res.data.data);
+      setActivitiesTotal(res.data.pagination.total);
+      setActivitiesTotalPages(res.data.pagination.totalPages);
+    } catch (error: any) {
+      toast.error('Failed to load activities');
+    } finally {
+      setActivitiesLoading(false);
     }
   };
 
@@ -293,75 +316,106 @@ export function AdminDashboard({ userName = 'Admin User', profileImage, onNaviga
               <Clock className="w-5 h-5 text-blue-600" />
               Recent Platform Activity
             </h3>
-            <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">View All</button>
+            <span className="text-sm text-gray-500">{activitiesTotal} total</span>
           </div>
-          <div className="space-y-3">
-            {recentActivities
-              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-              .map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    activity.status === 'completed' ? 'bg-green-100' :
-                    activity.status === 'urgent' ? 'bg-red-100' :
-                    'bg-blue-100'
-                  }`}>
-                    {activity.status === 'completed' ? <CheckCircle className="w-5 h-5 text-green-600" /> :
-                     activity.status === 'urgent' ? <AlertTriangle className="w-5 h-5 text-red-600" /> :
-                     <Clock className="w-5 h-5 text-blue-600" />}
+
+          {/* Activity list */}
+          <div className="space-y-3 min-h-[260px]">
+            {activitiesLoading ? (
+              <div className="flex items-center justify-center h-52">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+              </div>
+            ) : recentActivities.length === 0 ? (
+              <div className="flex items-center justify-center h-52 text-gray-400 text-sm">
+                No recent activity found.
+              </div>
+            ) : (
+              recentActivities.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      activity.status === 'completed' ? 'bg-green-100' :
+                      activity.status === 'urgent'    ? 'bg-red-100'   :
+                      'bg-blue-100'
+                    }`}>
+                      {activity.status === 'completed' ? (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      ) : activity.status === 'urgent' ? (
+                        <AlertTriangle className="w-5 h-5 text-red-600" />
+                      ) : (
+                        <Clock className="w-5 h-5 text-blue-600" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{activity.message}</p>
+                      <p className="text-sm text-gray-500">{activity.time}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{activity.message}</p>
-                    <p className="text-sm text-gray-600">{activity.time}</p>
-                  </div>
-                </div>
-                <div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  <span className={`ml-4 px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                     activity.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    activity.status === 'urgent' ? 'bg-red-100 text-red-700' :
+                    activity.status === 'urgent'    ? 'bg-red-100 text-red-700'     :
                     'bg-blue-100 text-blue-700'
                   }`}>
                     {activity.status === 'completed' ? 'Completed' :
-                     activity.status === 'urgent' ? 'Urgent' :
-                     'Pending'}
+                     activity.status === 'urgent'    ? 'Urgent'    : 'Pending'}
                   </span>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-          
-          {/* Pagination */}
-          {recentActivities.length > itemsPerPage && (
+
+          {/* Server-side pagination */}
+          {activitiesTotalPages > 1 && (
             <div className="mt-6 flex items-center justify-between border-t pt-4">
               <p className="text-sm text-gray-600">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, recentActivities.length)} of {recentActivities.length} activities
+                Showing{' '}
+                <span className="font-medium">
+                  {(activitiesPage - 1) * itemsPerPage + 1}–
+                  {Math.min(activitiesPage * itemsPerPage, activitiesTotal)}
+                </span>{' '}
+                of <span className="font-medium">{activitiesTotal}</span> activities
               </p>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => setActivitiesPage(p => Math.max(p - 1, 1))}
+                  disabled={activitiesPage === 1 || activitiesLoading}
                   className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.ceil(recentActivities.length / itemsPerPage) }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 text-sm rounded-lg transition-colors ${
-                        currentPage === page
-                          ? 'bg-green-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: activitiesTotalPages }, (_, i) => i + 1).map((p) => {
+                    const isCurrentPage = p === activitiesPage;
+                    const isNearCurrent = Math.abs(p - activitiesPage) <= 1;
+                    const isEdge = p === 1 || p === activitiesTotalPages;
+                    if (!isNearCurrent && !isEdge) {
+                      if (p === activitiesPage - 2 || p === activitiesPage + 2) {
+                        return <span key={p} className="px-1 text-gray-400 text-sm">…</span>;
+                      }
+                      return null;
+                    }
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setActivitiesPage(p)}
+                        disabled={activitiesLoading}
+                        className={`w-8 h-8 text-sm rounded-lg transition-colors ${
+                          isCurrentPage
+                            ? 'bg-green-600 text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
                 </div>
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(recentActivities.length / itemsPerPage)))}
-                  disabled={currentPage === Math.ceil(recentActivities.length / itemsPerPage)}
+                  onClick={() => setActivitiesPage(p => Math.min(p + 1, activitiesTotalPages))}
+                  disabled={activitiesPage === activitiesTotalPages || activitiesLoading}
                   className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next

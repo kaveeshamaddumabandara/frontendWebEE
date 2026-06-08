@@ -73,7 +73,8 @@ export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
   getUserGrowth: () => api.get('/dashboard/user-growth'),
   getUserDistribution: () => api.get('/dashboard/user-distribution'),
-  getRecentActivities: () => api.get('/dashboard/recent-activities'),
+  getRecentActivities: (page = 1, limit = 5) =>
+    api.get('/dashboard/recent-activities', { params: { page, limit } }),
   getPlatformActivity: () => api.get('/dashboard/platform-activity'),
   getRevenueTrends: () => api.get('/dashboard/revenue-trends'),
 };
