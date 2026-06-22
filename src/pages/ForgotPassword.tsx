@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Shield, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Shield, Mail, ArrowLeft } from 'lucide-react';
 import { NavigationBar } from '../components/NavigationBar';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/env';

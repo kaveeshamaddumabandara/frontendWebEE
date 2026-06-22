@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
 import { QuickActionsMenu } from '../components/QuickActionsMenu';
 import { Clock, CheckCircle, XCircle, User, Calendar, Eye, X, FileText, Briefcase, Award, MapPin, Phone, Mail } from 'lucide-react';
@@ -61,15 +61,7 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  useEffect(() => {
-    fetchRequests();
-  }, [filter]);
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminAPI.getPendingRequests(filter === 'all' ? undefined : filter);
@@ -80,7 +72,11 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
   const handleApprove = async (requestId: string) => {
     try {

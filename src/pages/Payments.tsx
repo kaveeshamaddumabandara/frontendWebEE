@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
 import { QuickActionsMenu } from '../components/QuickActionsMenu';
-import { DollarSign, CreditCard, TrendingUp, Filter, Search, Calendar, User, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { DollarSign, Search, Calendar, User } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'react-toastify';
 import { paymentAPI } from '../services/api';
@@ -50,35 +50,16 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
   const [totalPages, setTotalPages] = useState(1);
   const [totalPayments, setTotalPayments] = useState(0);
 
-  useEffect(() => {
-    initializePaymentsPage();
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await paymentAPI.getPaymentStats();
+      setStatsData(response.data.data);
+    } catch (error: any) {
+      console.error('Error fetching payment stats:', error);
+    }
   }, []);
 
-  // Reset to page 1 whenever filters change
-  useEffect(() => {
-    if (initialLoading) return;
-    setCurrentPage(1);
-  }, [filterStatus, filterMethod]);
-
-  // Fetch whenever page changes (also triggered by the filter reset above)
-  useEffect(() => {
-    if (initialLoading) return;
-    fetchPayments();
-  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const initializePaymentsPage = async () => {
-    try {
-      setInitialLoading(true);
-      await Promise.all([
-        fetchPayments(true),
-        fetchStats(),
-      ]);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const fetchPayments = async (isInitialLoad = false) => {
+  const fetchPayments = useCallback(async (isInitialLoad = false) => {
     try {
       if (!isInitialLoad) {
         setTableLoading(true);
@@ -103,16 +84,35 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
         setTableLoading(false);
       }
     }
-  };
+  }, [currentPage, filterMethod, filterStatus]);
 
-  const fetchStats = async () => {
+  const initializePaymentsPage = useCallback(async () => {
     try {
-      const response = await paymentAPI.getPaymentStats();
-      setStatsData(response.data.data);
-    } catch (error: any) {
-      console.error('Error fetching payment stats:', error);
+      setInitialLoading(true);
+      await Promise.all([
+        fetchPayments(true),
+        fetchStats(),
+      ]);
+    } finally {
+      setInitialLoading(false);
     }
-  };
+  }, [fetchPayments, fetchStats]);
+
+  useEffect(() => {
+    initializePaymentsPage();
+  }, [initializePaymentsPage]);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    if (initialLoading) return;
+    setCurrentPage(1);
+  }, [filterStatus, filterMethod, initialLoading]);
+
+  // Fetch whenever page changes (also triggered by the filter reset above)
+  useEffect(() => {
+    if (initialLoading) return;
+    fetchPayments();
+  }, [currentPage, fetchPayments, initialLoading]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

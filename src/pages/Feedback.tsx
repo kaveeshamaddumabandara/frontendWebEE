@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { NavigationBar } from '../components/NavigationBar';
 import { QuickActionsMenu } from '../components/QuickActionsMenu';
-import { MessageSquare, Star, User, Mail, Calendar, Filter, Search } from 'lucide-react';
+import { MessageSquare, Star, User, Mail, Calendar, Search } from 'lucide-react';
 import { feedbackAPI } from '../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +18,7 @@ interface FeedbackProps {
   onHome?: () => void;
 }
 
-interface Feedback {
+interface FeedbackRecord {
   _id: string;
   userId: {
     _id: string;
@@ -38,7 +38,7 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
   const { user } = useAuth();
   const [initialLoading, setInitialLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [feedbacks, setFeedbacks] = useState<FeedbackRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRating, setFilterRating] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -47,43 +47,7 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
   const itemsPerPage = 5;
   const hasInitialized = useRef(false);
 
-  useEffect(() => {
-    initializeFeedbackPage();
-  }, []);
-
-  useEffect(() => {
-    if (!hasInitialized.current) return;
-    setCurrentPage(1);
-    fetchFeedbacks();
-  }, [filterRating, filterCategory]);
-
-  const initializeFeedbackPage = async () => {
-    try {
-      setInitialLoading(true);
-      await Promise.all([
-        fetchFeedbackStats(),
-        fetchFeedbacks(true),
-      ]);
-      hasInitialized.current = true;
-    } catch (error) {
-      hasInitialized.current = true;
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const fetchFeedbackStats = async () => {
-    try {
-      const statsRes = await feedbackAPI.getFeedbackStats();
-      setStats(statsRes.data.data);
-    } catch (error: any) {
-      console.error('Error fetching feedback stats:', error);
-      toast.error(error.response?.data?.message || 'Failed to load feedback stats');
-      setStats(null);
-    }
-  };
-
-  const fetchFeedbacks = async (isInitialLoad = false) => {
+  const fetchFeedbacks = useCallback(async (isInitialLoad = false) => {
     try {
       if (!isInitialLoad) {
         setTableLoading(true);
@@ -105,7 +69,43 @@ export function Feedback({ userName = 'Admin User', profileImage, onBack, onNavi
         setTableLoading(false);
       }
     }
+  }, [filterRating, filterCategory]);
+
+  const fetchFeedbackStats = async () => {
+    try {
+      const statsRes = await feedbackAPI.getFeedbackStats();
+      setStats(statsRes.data.data);
+    } catch (error: any) {
+      console.error('Error fetching feedback stats:', error);
+      toast.error(error.response?.data?.message || 'Failed to load feedback stats');
+      setStats(null);
+    }
   };
+
+  const initializeFeedbackPage = useCallback(async () => {
+    try {
+      setInitialLoading(true);
+      await Promise.all([
+        fetchFeedbackStats(),
+        fetchFeedbacks(true),
+      ]);
+      hasInitialized.current = true;
+    } catch (error) {
+      hasInitialized.current = true;
+    } finally {
+      setInitialLoading(false);
+    }
+  }, [fetchFeedbacks]);
+
+  useEffect(() => {
+    initializeFeedbackPage();
+  }, [initializeFeedbackPage]);
+
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    setCurrentPage(1);
+    fetchFeedbacks();
+  }, [filterRating, filterCategory, fetchFeedbacks]);
 
   const handleMarkAsReviewed = async (feedbackId: string) => {
     try {
