@@ -4,6 +4,7 @@ import { NavigationBar } from '../components/NavigationBar';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/env';
 
 const ContactUs: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const ContactUs: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3001/api/contact/send', formData);
+      const response = await axios.post(`${API_BASE_URL}/contact/send`, formData);
       
       if (response.data.status === 'success') {
         setSubmitted(true);

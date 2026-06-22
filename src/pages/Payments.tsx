@@ -47,16 +47,24 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
   const [filterMethod, setFilterMethod] = useState<string>('all');
   const [statsData, setStatsData] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalPayments, setTotalPayments] = useState(0);
 
   useEffect(() => {
     initializePaymentsPage();
   }, []);
 
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    if (initialLoading) return;
+    setCurrentPage(1);
+  }, [filterStatus, filterMethod]);
+
+  // Fetch whenever page changes (also triggered by the filter reset above)
   useEffect(() => {
     if (initialLoading) return;
     fetchPayments();
-  }, [filterStatus, filterMethod, currentPage]);
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initializePaymentsPage = async () => {
     try {
@@ -82,8 +90,10 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
         limit: 10,
       });
 
-      setPayments(response.data.data.payments);
-      setHasMore(response.data.data.pagination.hasMore);
+      const { payments: fetched, pagination } = response.data.data;
+      setPayments(fetched);
+      setTotalPages(pagination.totalPages ?? 1);
+      setTotalPayments(pagination.totalPayments ?? fetched.length);
     } catch (error: any) {
       console.error('Error fetching payments:', error);
       toast.error(error.response?.data?.message || 'Failed to load payments');
@@ -102,10 +112,6 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
     } catch (error: any) {
       console.error('Error fetching payment stats:', error);
     }
-  };
-
-  const handleLoadMore = () => {
-    setCurrentPage(prev => prev + 1);
   };
 
   const formatDate = (dateString: string) => {
@@ -221,6 +227,11 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
           <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-orange-200 transition-all transform hover:-translate-y-1">
             <p className="text-sm font-semibold text-gray-700">Pending Payments</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.pendingCount || 0}</h3>
+            {statsData?.overview?.pendingRegistrationFees > 0 && (
+              <p className="text-xs text-orange-500 mt-1">
+                {statsData.overview.pendingRegistrationFees} unpaid registration fee{statsData.overview.pendingRegistrationFees > 1 ? 's' : ''}
+              </p>
+            )}
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl border border-gray-100 hover:border-blue-200 transition-all transform hover:-translate-y-1">
@@ -402,20 +413,61 @@ export function Payments({ userName = 'Admin User', profileImage, onBack, onNavi
           </div>
         )}
 
-        {/* Results Summary and See More Button */}
-        {filteredPayments.length > 0 && (
-          <div className="mt-6 text-center">
-            <div className="text-gray-600 mb-4">
-              Showing {filteredPayments.length} transactions
-            </div>
-            {hasMore && (
-              <button 
-                onClick={handleLoadMore}
-                disabled={tableLoading}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
-              >
-                {tableLoading ? 'Loading...' : 'See More'}
-              </button>
+        {/* Pagination */}
+        {totalPayments > 0 && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-gray-600">
+              Showing{' '}
+              <span className="font-medium">{(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, totalPayments)}</span>
+              {' '}of <span className="font-medium">{totalPayments}</span> transactions
+            </p>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || tableLoading}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                    const isCurrent = p === currentPage;
+                    const isNear = Math.abs(p - currentPage) <= 1;
+                    const isEdge = p === 1 || p === totalPages;
+                    if (!isNear && !isEdge) {
+                      if (p === currentPage - 2 || p === currentPage + 2) {
+                        return <span key={p} className="px-1 text-gray-400 text-sm">…</span>;
+                      }
+                      return null;
+                    }
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        disabled={tableLoading}
+                        className={`w-8 h-8 text-sm rounded-lg transition-colors ${
+                          isCurrent
+                            ? 'bg-green-600 text-white font-semibold'
+                            : 'border border-gray-300 hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || tableLoading}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
             )}
           </div>
         )}

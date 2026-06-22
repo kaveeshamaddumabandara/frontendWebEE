@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Upload, X, Loader } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { API_BASE_URL } from '../config/env';
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void;
@@ -35,7 +36,7 @@ export function ImageUpload({ onImageUploaded, currentImage, label = 'Upload Ima
     try {
       setUploading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:3001/api/upload/image', formData, {
+      const response = await axios.post(`${API_BASE_URL}/upload/image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,

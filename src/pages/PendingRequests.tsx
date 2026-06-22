@@ -31,11 +31,11 @@ interface Request {
   city?: string;
   province?: string;
   profileImage?: string;
+  registrationFeePaid?: boolean;
   // Caregiver specific fields
   experience?: string;
   qualifications?: string;
   specializations?: string[];
-  availability?: string;
   hourlyRate?: number;
   bio?: string;
   certifications?: string[];
@@ -244,6 +244,15 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
                           }`}>
                             {status.charAt(0).toUpperCase() + status.slice(1)}
                           </span>
+                          {request.role === 'caregiver' && (
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              request.registrationFeePaid
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {request.registrationFeePaid ? 'Fee Paid' : 'Fee Pending'}
+                            </span>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 gap-2 mb-3">
                           <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -480,12 +489,6 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
                     <div>
                       <label className="text-sm font-medium text-gray-600">Languages</label>
                       <p className="text-gray-900">{selectedRequest.languages.join(', ')}</p>
-                    </div>
-                  )}
-                  {selectedRequest.availability && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Availability</label>
-                      <p className="text-gray-900">{selectedRequest.availability}</p>
                     </div>
                   )}
                   {selectedRequest.hourlyRate && (

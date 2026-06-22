@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/env';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = API_BASE_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -73,7 +74,8 @@ export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
   getUserGrowth: () => api.get('/dashboard/user-growth'),
   getUserDistribution: () => api.get('/dashboard/user-distribution'),
-  getRecentActivities: () => api.get('/dashboard/recent-activities'),
+  getRecentActivities: (page = 1, limit = 5) =>
+    api.get('/dashboard/recent-activities', { params: { page, limit } }),
   getPlatformActivity: () => api.get('/dashboard/platform-activity'),
   getRevenueTrends: () => api.get('/dashboard/revenue-trends'),
 };
@@ -176,6 +178,17 @@ export const paymentAPI = {
   
   // Admin only - Delete payment
   deletePayment: (id: string) => api.delete(`/payments/${id}`),
+};
+
+// Notification API (admin only)
+export const notificationAPI = {
+  getNotifications: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) =>
+    api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch('/notifications/mark-all-read'),
+  deleteNotification: (id: string) => api.delete(`/notifications/${id}`),
+  deleteAllRead: () => api.delete('/notifications/read'),
 };
 
 export default api;
