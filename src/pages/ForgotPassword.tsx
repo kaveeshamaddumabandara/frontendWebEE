@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { Shield, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { NavigationBar } from '../components/NavigationBar';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/env';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ const ForgotPassword: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/forgotpassword', {
+      const response = await axios.post(`${API_BASE_URL}/auth/forgotpassword`, {
         email,
       });
 

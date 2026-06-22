@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { Shield, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { NavigationBar } from '../components/NavigationBar';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/env';
 
 const ResetPassword: React.FC = () => {
   const [password, setPassword] = useState('');
@@ -50,7 +51,7 @@ const ResetPassword: React.FC = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:3001/api/auth/resetpassword/${resetToken}`,
+        `${API_BASE_URL}/auth/resetpassword/${resetToken}`,
         { password }
       );
 

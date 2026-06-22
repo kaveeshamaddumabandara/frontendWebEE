@@ -2,6 +2,7 @@ import { X, User, LogOut, Shield, Bell, Check, Trash2, CheckCheck } from 'lucide
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationAPI } from '../services/api';
+import { resolveMediaUrl } from '../config/env';
 
 interface NavigationBarProps {
   userType?: 'care-receiver' | 'caregiver' | 'admin' | null;
@@ -358,7 +359,7 @@ export function NavigationBar({ userType, userName, profileImage, onMenuClick, s
                         <div className="relative w-9 h-9 bg-emerald-200 rounded-xl flex items-center justify-center overflow-hidden">
                           {profileImage ? (
                             <img 
-                              src={profileImage.startsWith('http') ? profileImage : `http://localhost:3001${profileImage}`} 
+                              src={resolveMediaUrl(profileImage)} 
                               alt={userName} 
                               className="w-full h-full object-cover" 
                             />
@@ -396,7 +397,7 @@ export function NavigationBar({ userType, userName, profileImage, onMenuClick, s
                               <div className="w-12 h-12 bg-emerald-200 backdrop-blur-sm rounded-2xl flex items-center justify-center overflow-hidden ring-2 ring-emerald-300">
                                 {profileImage ? (
                                   <img 
-                                    src={profileImage.startsWith('http') ? profileImage : `http://localhost:3001${profileImage}`} 
+                                    src={resolveMediaUrl(profileImage)} 
                                     alt={userName} 
                                     className="w-full h-full object-cover" 
                                   />
@@ -479,7 +480,7 @@ export function NavigationBar({ userType, userName, profileImage, onMenuClick, s
                       <div className="w-12 h-12 bg-emerald-200 rounded-2xl flex items-center justify-center overflow-hidden">
                         {profileImage ? (
                           <img 
-                            src={profileImage.startsWith('http') ? profileImage : `http://localhost:3001${profileImage}`} 
+                            src={resolveMediaUrl(profileImage)} 
                             alt={userName} 
                             className="w-full h-full object-cover" 
                           />
