@@ -67,6 +67,15 @@ export const adminAPI = {
   },
   approveRequest: (id: string) => api.patch(`/admin/requests/${id}/approve`),
   rejectRequest: (id: string, data?: { reason: string }) => api.patch(`/admin/requests/${id}/reject`, data),
+
+  getProfileChangeRequests: (status?: string) => {
+    const params = status ? { status } : {};
+    return api.get('/admin/profile-change-requests', { params });
+  },
+  approveProfileChangeRequest: (id: string) =>
+    api.patch(`/admin/profile-change-requests/${id}/approve`),
+  rejectProfileChangeRequest: (id: string, data?: { reason: string }) =>
+    api.patch(`/admin/profile-change-requests/${id}/reject`, data),
 };
 
 // Dashboard API
