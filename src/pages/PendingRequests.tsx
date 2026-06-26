@@ -48,16 +48,39 @@ interface Request {
   };
 }
 
+interface ProfileChangeRequest {
+  _id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  submittedAt: string;
+  reviewedAt?: string;
+  pendingPhone?: string;
+  pendingAddressLabel?: string;
+  currentPhone?: string;
+  currentAddress?: string;
+  caregiver?: {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    profileImage?: string;
+  };
+}
+
 export default function PendingRequests({ userName = 'Admin User', profileImage, onBack, onNavigateToProfile, onNavigateToUserManagement, onNavigateToFeedback, onNavigateToPayments, onLogout, onHome }: PendingRequestsProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'registration' | 'contact'>('registration');
   const [requests, setRequests] = useState<Request[]>([]);
+  const [contactRequests, setContactRequests] = useState<ProfileChangeRequest[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [requestToReject, setRequestToReject] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<'registration' | 'contact'>('registration');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -74,9 +97,27 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
     }
   }, [filter]);
 
+  const fetchContactRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await adminAPI.getProfileChangeRequests(filter === 'all' ? undefined : filter);
+      setContactRequests(response.data.data);
+    } catch (error: any) {
+      console.error('Error fetching profile change requests:', error);
+      toast.error(error.response?.data?.message || 'Failed to load contact update requests');
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
+
   useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+    setCurrentPage(1);
+    if (activeTab === 'registration') {
+      fetchRequests();
+    } else {
+      fetchContactRequests();
+    }
+  }, [activeTab, fetchRequests, fetchContactRequests]);
 
   const handleApprove = async (requestId: string) => {
     try {
@@ -89,25 +130,43 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
     }
   };
 
+  const handleApproveContactChange = async (requestId: string) => {
+    try {
+      await adminAPI.approveProfileChangeRequest(requestId);
+      toast.success('Contact details approved and updated successfully');
+      fetchContactRequests();
+    } catch (error: any) {
+      console.error('Error approving contact change:', error);
+      toast.error(error.response?.data?.message || 'Failed to approve contact update');
+    }
+  };
+
   const handleReject = async () => {
     if (!requestToReject || !rejectionReason.trim()) {
       toast.error('Please provide a reason for rejection');
       return;
     }
     try {
-      await adminAPI.rejectRequest(requestToReject, { reason: rejectionReason });
-      toast.success('Request rejected successfully');
+      if (rejectTarget === 'contact') {
+        await adminAPI.rejectProfileChangeRequest(requestToReject, { reason: rejectionReason });
+        toast.success('Contact update rejected successfully');
+        fetchContactRequests();
+      } else {
+        await adminAPI.rejectRequest(requestToReject, { reason: rejectionReason });
+        toast.success('Request rejected successfully');
+        fetchRequests();
+      }
       setShowRejectModal(false);
       setRejectionReason('');
       setRequestToReject(null);
-      fetchRequests();
     } catch (error: any) {
       console.error('Error rejecting request:', error);
       toast.error(error.response?.data?.message || 'Failed to reject request');
     }
   };
 
-  const openRejectModal = (requestId: string) => {
+  const openRejectModal = (requestId: string, target: 'registration' | 'contact' = 'registration') => {
+    setRejectTarget(target);
     setRequestToReject(requestId);
     setShowRejectModal(true);
   };
@@ -166,7 +225,33 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
         {/* Header with Page Title */}
         <div className="mb-8">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Caregiver Approval Requests</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Caregiver Requests</h1>
+            <p className="text-gray-600">
+              Review new caregiver registrations and contact detail updates.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setActiveTab('registration')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'registration'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Registration
+            </button>
+            <button
+              onClick={() => setActiveTab('contact')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'contact'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Contact Updates
+            </button>
           </div>
         </div>
 
@@ -186,11 +271,131 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
-          <span className="text-sm text-gray-600">Total: {requests.filter(req => req.role === 'caregiver').length}</span>
+          <span className="text-sm text-gray-600">
+            Total:{' '}
+            {activeTab === 'registration'
+              ? requests.filter(req => req.role === 'caregiver').length
+              : contactRequests.length}
+          </span>
         </div>
 
-        {/* Requests List */}
-        {requests.filter(req => req.role === 'caregiver').length === 0 ? (
+        {activeTab === 'contact' ? (
+          contactRequests.length === 0 ? (
+            <div className="bg-white rounded-xl p-12 text-center border-2 border-gray-200">
+              <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No contact update requests found</h3>
+              <p className="text-gray-600">
+                {filter === 'all'
+                  ? 'There are no caregiver contact update requests at the moment.'
+                  : `There are no ${filter} contact update requests.`}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {contactRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((request) => (
+                <div key={request._id} className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-green-300 transition-colors shadow-lg hover:shadow-xl transition-all duration-200">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1">
+                      {request.caregiver?.profileImage ? (
+                        <img
+                          src={request.caregiver.profileImage}
+                          alt={request.caregiver.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-300"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-gray-600" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {request.caregiver?.name || 'Caregiver'}
+                          </h3>
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                            Contact Update
+                          </span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            request.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : request.status === 'approved'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                          <div className="rounded-lg bg-gray-50 p-4">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Current details</p>
+                            <div className="space-y-2 text-sm text-gray-600">
+                              <div className="flex items-center gap-2">
+                                <Phone className="w-4 h-4" />
+                                <span>{request.currentPhone || 'Not provided'}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4" />
+                                <span>{request.currentAddress || 'Not provided'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-amber-50 p-4 border border-amber-200">
+                            <p className="text-sm font-medium text-amber-800 mb-2">Requested changes</p>
+                            <div className="space-y-2 text-sm text-amber-900">
+                              {request.pendingPhone ? (
+                                <div className="flex items-center gap-2">
+                                  <Phone className="w-4 h-4" />
+                                  <span>{request.pendingPhone}</span>
+                                </div>
+                              ) : null}
+                              {request.pendingAddressLabel ? (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{request.pendingAddressLabel}</span>
+                                </div>
+                              ) : null}
+                              {!request.pendingPhone && !request.pendingAddressLabel && (
+                                <span>No pending values</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Calendar className="w-4 h-4" />
+                          <span>Submitted {formatDate(request.submittedAt)}</span>
+                        </div>
+                        {request.status === 'rejected' && request.rejectionReason && (
+                          <p className="mt-2 text-sm text-red-600">
+                            Rejection reason: {request.rejectionReason}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {request.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApproveContactChange(request._id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => openRejectModal(request._id, 'contact')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          requests.filter(req => req.role === 'caregiver').length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center border-2 border-gray-200">
             <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No caregiver requests found</h3>
@@ -326,10 +531,11 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
               );
             })}
           </div>
+        )
         )}
         
         {/* Pagination */}
-        {requests.filter(req => req.role === 'caregiver').length > itemsPerPage && (
+        {activeTab === 'registration' && requests.filter(req => req.role === 'caregiver').length > itemsPerPage && (
           <div className="mt-6 flex items-center justify-center gap-4">
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -362,11 +568,51 @@ export default function PendingRequests({ userName = 'Admin User', profileImage,
             </button>
           </div>
         )}
+
+        {activeTab === 'contact' && contactRequests.length > itemsPerPage && (
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: Math.ceil(contactRequests.length / itemsPerPage) }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    currentPage === page
+                      ? 'bg-green-600 text-white'
+                      : 'border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(contactRequests.length / itemsPerPage), prev + 1))}
+              disabled={currentPage === Math.ceil(contactRequests.length / itemsPerPage)}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
         
         {/* Results Summary */}
-        {requests.filter(req => req.role === 'caregiver').length > 0 && (
+        {activeTab === 'registration' && requests.filter(req => req.role === 'caregiver').length > 0 && (
           <div className="mt-4 text-center text-gray-600">
             Showing {Math.min((currentPage - 1) * itemsPerPage + 1, requests.filter(req => req.role === 'caregiver').length)} to {Math.min(currentPage * itemsPerPage, requests.filter(req => req.role === 'caregiver').length)} of {requests.filter(req => req.role === 'caregiver').length} caregiver requests
+          </div>
+        )}
+
+        {activeTab === 'contact' && contactRequests.length > 0 && (
+          <div className="mt-4 text-center text-gray-600">
+            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, contactRequests.length)} to {Math.min(currentPage * itemsPerPage, contactRequests.length)} of {contactRequests.length} contact update requests
           </div>
         )}
       </div>
